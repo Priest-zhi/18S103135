@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 class Game:
     def __init__(self, type, child, p1, p2):
@@ -22,6 +23,7 @@ class Go(Game):
     def __init__(self, p1, p2):
         super(Go, self).__init__("go",self, p1, p2)
         myBoard = Board(self.gtype, p1, p2)
+        self.Board = myBoard
         myPiece1 = Piece(self.gtype)
         myPlayer1 = Player(self.gtype, p1, myPiece1, 1)
         self.player1 = myPlayer1
@@ -32,6 +34,23 @@ class Go(Game):
 
         myAction = Action(self.gtype, p1, p2, go=self)
         self.Action = myAction
+
+    def GetPlayer(self, playername):
+        if self.player1.playername == playername:
+            return self.player1
+        elif self.player2.playername == playername:
+            return self.player2
+        else:
+            return
+
+    def GetPlayerbyID(self, ID):
+        if self.player1.playerID == ID:
+            return self.player1
+        elif self.player2.playerID == ID:
+            return self.player2
+        else:
+            return
+
 
 class Chess(Game):
     def __init__(self, p1, p2):
@@ -141,7 +160,7 @@ class Piece():
         if self.data[piece[:-1]] < 0:
             print("error")
 
-class Position(Game):
+class Position():
     def __init__(self, gtype):
         pass
 
@@ -188,13 +207,14 @@ class Action(Game):
 
     def Position(self, player, piece, x, y):
         if self.gtype == "go":
-            player = self.chess.GetPlayer(player)
+            player = self.go.GetPlayer(player)
             if player.playerID != self.GetPieceID(piece):
                 return False
             if not self.IsSafePosition(x, y):
                 return False
-            if self.chess.Board.GetPiece(x,y) != 0:
+            if self.go.Board.GetPiece(x,y) != 0:
                 return False
+            self.go.Board.SetPiece(piece, x, y)
         elif self.gtype == 'chess':
             player = self.chess.GetPlayer(player)
             if player.playerID != self.GetPieceID(piece):
@@ -203,7 +223,7 @@ class Action(Game):
                 return False
             if self.chess.Board.GetPiece(x,y) != 0:
                 return False
-
+            self.chess.Board.SetPiece(piece, x, y)
     def MOVE(self, player, x1, y1, x2, y2):
         #chess only
         if not (self.IsSafePosition(x1, y1) and self.IsSafePosition(x2, y2)):
@@ -225,13 +245,13 @@ class Action(Game):
         #go only
         if not self.IsSafePosition(x, y):
             return False
-        if self.chess.Board.GetPiece(x, y) == 0:
+        if self.go.Board.GetPiece(x, y) == 0:
             return False
-        player = self.chess.GetPlayer(player)
-        piece = self.chess.Board.GetPiece(x,y)
+        player = self.go.GetPlayer(player)
+        piece = self.go.Board.GetPiece(x,y)
         if player.playerID == int(self.GetPieceID(piece)):
             return False
-        self.chess.Board.ClearPiece(x, y)
+        self.go.Board.ClearPiece(x, y)
 
     def EAT(self, player, x1, y1, x2, y2):
         #chess only
@@ -261,6 +281,8 @@ class Action(Game):
 if __name__ == "__main__":
     GameType = input('Game: chess or go: ')
     pl1, pl2 = input("player1 and player2's name: ").split(' ')
+    if pl1 == pl2:
+        os._exit(0)
     if GameType == "chess":
         myGame = Chess(pl1, pl2)
     elif GameType == "go":
